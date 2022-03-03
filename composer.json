@@ -1,0 +1,44 @@
+{
+  "name": "thibedev/laravel-dropzone-chunk",
+  "description": "Laravel 9 Service that make it easy to handle chunked upload (dropzone out of the box)",
+  "keywords": ["Laravel","Dropzone", "chunk", "upload"],
+  "homepage": "https://github.com/thibeDev/laravel-dropzone-chunk",
+  "license": "MIT",
+  "authors": [
+    {
+      "name": "Thibaut Gobert",
+      "email": "thibaut.gobert@hotmail.com"
+    }
+  ],
+  "scripts": {
+    "lint:fix": "./vendor/bin/php-cs-fixer fix --config=.php_cs --using-cache false",
+    "lint:check": "./vendor/bin/phplint",
+    "lint": "composer run-script lint:fix && composer run-script lint:check",
+    "test": "./vendor/bin/phpunit"
+  },
+  "require": {
+    "php": "^8.0.2",
+    "illuminate/support": "^9.0",
+    "illuminate/filesystem": "^9.0"
+  },
+  "require-dev": {
+
+  },
+  "autoload": {
+    "psr-4": {
+      "ThibeDev\\DropzoneChunk\\": "src/"
+    }
+  },
+  "autoload-dev": {
+    "psr-4": {
+      "Tests\\": "tests/"
+    }
+  },
+  "extra":{
+    "laravel":{
+      "providers":[
+        "ThibeDev\\DropzoneChunk\\Providers\\DropzoneChunkServiceProvider"
+      ]
+    }
+  }
+}

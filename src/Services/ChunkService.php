@@ -2,7 +2,6 @@
 
 namespace ThibeDev\DropzoneChunk\Services;
 
-use Illuminate\Filesystem\Filesystem;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 
@@ -53,7 +52,7 @@ class ChunkService
     {
         $chunksUploaded = 0;
         for($i = 0; $i < $this->totalchunkcount; $i++) {
-            if(Storage::disk($this->disk)
+            if($this->disk
                 ->exists($this->tempDirectory . '/' . $this->uuid . '-' . $i . '.' . $this->chunkExtention)) {
                 $chunksUploaded++;
             }
@@ -98,7 +97,7 @@ class ChunkService
         $this->fileInput = $fileInput;
         $this->exportPath = $exportPath;
         $this->actualFileChunk = $request->file($this->fileInput);
-        $this->disk = config('dropzonechunk.disk');
+        $this->disk = Storage::build(config('filesystems.disks.'.config('dropzonechunk.disk')));
         $this->tempDirectory = config('dropzonechunk.temp_directory');
         $this->chunkExtention = config('dropzonechunk.chunk_extention');
         $this->keepOriginalName = $keepOriginalName;
@@ -112,21 +111,21 @@ class ChunkService
      */
     public function mergeChunks() : array
     {
-        $exportDisk = config('dropzonechunck.export_disk');
+        $exportDisk = Storage::build(config('filesystems.disks.'.config('dropzonechunk.export_disk')));
         $tempPath =  '/'. $this->tempDirectory;
         $exportPath = $this->exportPath ?? $tempPath;
 
         $tmpStream = tmpfile();
         for ($i = 0; $i < $this->totalchunkcount; $i++) {
-            $buff = Storage::disk($this->disk)->readStream($tempPath.'/'.$this->uuid.'-'.$i.'.'. $this->chunkExtention);
+            $buff = $this->disk->readStream($tempPath.'/'.$this->uuid.'-'.$i.'.'. $this->chunkExtention);
             stream_copy_to_stream($buff, $tmpStream);
-            Storage::disk($this->disk)->delete($tempPath.'/'.$this->uuid.'-'.$i.'.'. $this->chunkExtention);
+            $this->disk->delete($tempPath.'/'.$this->uuid.'-'.$i.'.'. $this->chunkExtention);
         }
-        Storage::disk($exportDisk)->put($exportPath.'/'.$this->getFilename(), $tmpStream);
+        $exportDisk->put($exportPath.'/'.$this->getFilename(), $tmpStream);
         $this->uploaded = true;
         return [
             'name' => $this->getFilename(),
-            'path' => $exportPath . '/' .  $this->getFilename()
+            'path' => $exportDisk->url($exportPath.'/'.$this->getFilename())
         ];
     }
 
@@ -153,7 +152,7 @@ class ChunkService
      */
     public function storeChunk()
     {
-        return Storage::disk($this->disk)
+        return $this->disk
             ->putFileAs(
                 $this->tempDirectory.'/',
                 $this->actualFileChunk,
